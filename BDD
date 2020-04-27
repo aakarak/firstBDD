@@ -1,0 +1,184 @@
+# -*- coding: utf-8 -*-
+"""
+Premier test dico
+"""
+import json
+import os
+dico = {}
+
+try:
+    with open('dico.txt', 'r+') as file:
+        dico = json.load(file)
+        suppr = 'dico.txt'
+except FileNotFoundError:
+    print("Ce fichier n'existe pas.\nCréation en cours")
+
+#Lecture de la base de donnée
+
+def afficherListeComplete():
+    
+    for i in dico:
+        print(i,":")
+        for k in dico[i]:
+            print(" ",k,":",dico[i][k])
+
+def afficherProduit():
+    #Affiche les élements du produit choisis
+    cleProduit = input("Entrez le n° de votre produit")
+    try:
+        return print(dico[cleProduit])
+    except KeyError:
+        print("Ce produit n'existe pas")
+        
+def verifSaisie(saisieCle):
+    return saisieCle.isdigit()
+
+        
+def ajouterCle():
+    #Ajouter un article 
+    
+    nomCle =input("Nom clé")
+    #VERIFICATION DE L ENTREE DE LA CLE(DIGIT ET PAS DANS LA LISTE)
+    if verifSaisie(nomCle) and nomCle not in dico:
+        if len(nomCle) < 2:
+            nomCle = "L00" + nomCle
+        elif len(nomCle) < 3:
+            nomCle = "L0" + nomCle
+        elif len(nomCle) < 4:
+            nomCle = "L" + nomCle
+        
+        dico[nomCle] = {
+            "Nom produit": input("Entrez le nom du produit"),
+            "Quantite piece" : int(input("Quantité")),
+            "Prix HTVA": int(input("Prix HTVA")),
+            "Prix TTC": 0,
+            "Description": input("Description du produit"),
+        }
+        dico[nomCle]["Prix TTC"] = dico[nomCle]["Prix HTVA"] *1.21
+        
+        #ECRITURE DES DONNES DANS UN FICHIER TXT
+        with open('dico.txt', 'w') as file:
+            json.dump(dico, file)
+    else:
+        print("Cette clé existe ou votre entrée n'est pas correcte.")
+        print("Si la clé existe, veuillez la supprimer avant d'en rajouter une du meme nom.")
+        
+def suppressionCle():
+    #SUPRRESSION DUNE CLE EN PARTICULIER
+    cle = input("Quel produit voulez vous supprimer ?")
+    del dico[cle]
+    with open('dico.txt','w+') as file:
+        json.dump(dico,file)
+    
+    
+def suppressionComplete():
+    #SUPPRESSION DE TOUTE LES DONNEES ENCODEES
+    return os.remove(suppr)
+   
+            
+
+
+def rechercheCle():
+    valeur = input("Entrez une clé ou une descrption de produit.")
+    for i in dico:
+        if valeur in i:
+            print(dico[valeur])
+
+
+def rechercheNomDescription():
+    cond = False
+    entree = input("recherche par valeur : ")
+    for i in dico:
+        for k in dico[i]:
+            if entree.lower()  in str(dico[i][k]).lower() or entree.lower() in str(dico[i]["Description"]):
+                cond = True
+                if cond:
+                    for k,v in dico[i].items():
+                        print(k," : ",v)
+            break
+    if not cond:
+        print("Valeur non trouvée") 
+def rechercheQuantitePrix():   
+    cond = False
+    entree = input("recherche par valeur : ")
+    for i in dico:
+        for k in dico[i]:
+            if entree.lower()  in str(dico[i]["Quantite piece"]).lower() or entree.lower() in str(dico[i]["Prix HTVA"]):
+                cond = True
+                if cond:
+                    for k,v in dico[i].items():
+                        print(k," : ",v)
+            break
+    if not cond:
+        print("Valeur non trouvée")                   
+def depotChangementMarchandise():
+    entree = input("Voulez vous rajouter un nouveau produit ? O/N")
+    
+    if entree.lower() == "o":
+        return ajouterCle()    
+    elif entree.lower() == "n":
+        entree2 = input("Voulez vous changer les données d'un produit ? O/N")
+        
+    if entree2.lower() == "o":
+        entree3 = input("Nom/Prix/Description")
+        
+        if entree3.lower() == "Nom".lower():
+            entree4= input("Quel est le produit que vous voulez transformer ?")
+            
+            if entree4 in dico:
+                entree5 = input("Quel est le nouveau nom de votre produit ?")
+                dico[entree4]["Nom produit"] = entree5
+            else:
+                print("Cette entrée n'existe pas")
+                
+        elif entree3.lower() == "Prix".lower():
+            entree4= input("Quel est le produit que vous voulez transformer ?")
+            
+            if entree4 in dico:
+                entree5 = input("Nouveau prix")
+                dico[entree4]["Prix HTVA"] = entree5
+            else:
+                print("Cette entrée n'existe pas")
+                
+        elif entree3.lower() == "Description".lower():
+            entree4= input("Quel est le produit que vous voulez transformer ?")
+            if entree4 in dico:
+                entree5 = input("Description")
+                dico[entree4]["Description"] = entree5
+            else:
+                print("Cette entrée n'existe pas")
+    elif entree2.lower() == "n":
+        print("Au revoir")
+        
+    with open('dico.txt','w+') as file:
+        json.dump(dico,file)
+"""
+fonction achat
+achat client/ il choisit un produit/il choisit le nombre/la nombre est retiré a quantité/nombre * prix produit
+
+fonction arrivage marchandise ou perte marchandise
+choix du produit/arrivage ou perte/entree nbre/dico quantite - nbre
+"""  
+
+def achat():
+    entree1 = input("Nom produit ou clé : ")
+    sortie = False
+    for cle1,valeur1 in dico.items():
+        for cle2,valeur2 in dico[cle1].items():
+            if entree1 == cle1 or entree1 == valeur2:
+                entree2 = input("Quantite")
+                dico[cle1]["Quantite piece"] = int(dico[cle1]["Quantite piece"]) - int(entree2)
+                factureHTVA = int(entree2) * int(dico[cle1]["Prix HTVA"])
+                print("Facture HTVA : {} € Facture TTC : {} € ".format(factureHTVA,factureHTVA * 1.21))
+                break
+        
+            
+       
+    with open('dico.txt','w+') as file:
+        json.dump(dico,file)
+
+
+
+
+#MAIN 
+achat()
